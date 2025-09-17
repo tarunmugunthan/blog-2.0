@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Blog</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2563eb;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .search-input {
+            padding: 0.5rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: #2563eb;
+        }
+
+        .category-filter {
+            padding: 0.5rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+            outline: none;
+        }
+
+        .featured-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+        }
+
+        .featured-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .featured-post {
+            background: #f8f9fa;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .featured-post:hover {
+            transform: translateY(-5px);
+        }
+
+        .post-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .post-content {
+            padding: 1.5rem;
+        }
+
+        .post-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .post-excerpt {
+            color: #6b7280;
+            margin-bottom: 1rem;
+        }
+
+        .post-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            color: #9ca3af;
+        }
+
+        .all-posts-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .posts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .post-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: white;
+        }
+
+        .post-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .post-card .post-image {
+            height: 150px;
+        }
+
+        .post-card .post-content {
+            padding: 1rem;
+        }
+
+        .post-card .post-title {
+            font-size: 1.1rem;
+        }
+
+        .article-view {
+            display: none;
+            background: white;
+            border-radius: 12px;
+            padding: 3rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-top: 2rem;
+        }
+
+        .article-title {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .article-meta {
+            margin-bottom: 2rem;
+            color: #6b7280;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 1rem;
+        }
+
+        .article-content {
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+
+        .article-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .back-button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 2rem;
+            transition: background-color 0.2s;
+        }
+
+        .back-button:hover {
+            background: #1d4ed8;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #6b7280;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            color: #6b7280;
+        }
+
+        .category-tag {
+            background: #dbeafe;
+            color: #2563eb;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .search-bar {
+                flex-direction: column;
+                gap: 0.5rem;
+                width: 100%;
+            }
+
+            .search-input, .category-filter {
+                width: 100%;
+            }
+
+            nav {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .featured-grid, .posts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .article-title {
+                font-size: 2rem;
+            }
+
+            .container {
+                padding: 0 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <div class="logo">My Blog</div>
+            <div class="search-bar">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search posts...">
+                <select id="categoryFilter" class="category-filter">
+                    <option value="">All Categories</option>
+                </select>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div id="homeView">
+            <section class="featured-section">
+                <h2 class="section-title">Featured Posts</h2>
+                <div id="featuredPosts" class="featured-grid">
+                    <div class="loading">Loading featured posts...</div>
+                </div>
+            </section>
+
+            <section class="all-posts-section">
+                <h2 class="section-title">All Posts</h2>
+                <div id="allPosts" class="posts-grid">
+                    <div class="loading">Loading posts...</div>
+                </div>
+            </section>
+        </div>
+
+        <div id="articleView" class="article-view">
+            <button id="backButton" class="back-button">← Back to Blog</button>
+            <article id="articleContent"></article>
+        </div>
+    </main>
+
+    <script>
+        class BlogApp {
+            constructor() {
+                this.currentPosts = [];
+                this.allPosts = [];
+                this.categories = [];
+                this.searchTimeout = null;
+                
+                this.initEventListeners();
+                this.loadFeaturedPosts();
+                this.loadAllPosts();
+                this.loadCategories();
+                this.handleURLRouting();
+            }
+
+            initEventListeners() {
+                const searchInput = document.getElementById('searchInput');
+                const categoryFilter = document.getElementById('categoryFilter');
+                const backButton = document.getElementById('backButton');
+
+                searchInput.addEventListener('input', (e) => {
+                    clearTimeout(this.searchTimeout);
+                    this.searchTimeout = setTimeout(() => {
+                        this.filterPosts();
+                    }, 300);
+                });
+
+                categoryFilter.addEventListener('change', () => {
+                    this.filterPosts();
+                });
+
+                backButton.addEventListener('click', () => {
+                    this.showHomePage();
+                });
+
+                window.addEventListener('popstate', () => {
+                    this.handleURLRouting();
+                });
+            }
+
+            async loadFeaturedPosts() {
+                try {
+                    const response = await fetch('/api/posts/featured');
+                    const posts = await response.json();
+                    this.renderFeaturedPosts(posts);
+                } catch (error) {
+                    console.error('Error loading featured posts:', error);
+                    document.getElementById('featuredPosts').innerHTML = 
+                        '<div class="no-results">Error loading featured posts</div>';
+                }
+            }
+
+            async loadAllPosts() {
+                try {
+                    const response = await fetch('/api/posts');
+                    this.allPosts = await response.json();
+                    this.currentPosts = [...this.allPosts];
+                    this.renderAllPosts(this.currentPosts);
+                } catch (error) {
+                    console.error('Error loading posts:', error);
+                    document.getElementById('allPosts').innerHTML = 
+                        '<div class="no-results">Error loading posts</div>';
+                }
+            }
+
+            async loadCategories() {
+                try {
+                    const response = await fetch('/api/categories');
+                    this.categories = await response.json();
+                    this.renderCategoryFilter();
+                } catch (error) {
+                    console.error('Error loading categories:', error);
+                }
+            }
+
+            renderFeaturedPosts(posts) {
+                const container = document.getElementById('featuredPosts');
+                
+                if (posts.length === 0) {
+                    container.innerHTML = '<div class="no-results">No featured posts available</div>';
+                    return;
+                }
+
+                container.innerHTML = posts.map(post => `
+                    <div class="featured-post" onclick="app.openPost('${post.slug}')">
+                        ${post.featured_image ? 
+                            `<img src="${post.featured_image}" alt="${post.title}" class="post-image">` : 
+                            '<div class="post-image" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>'
+                        }
+                        <div class="post-content">
+                            <h3 class="post-title">${post.title}</h3>
+                            <p class="post-excerpt">${post.excerpt || 'No excerpt available'}</p>
+                            <div class="post-meta">
+                                <span>${post.author || 'Anonymous'}</span>
+                                <span>${post.category ? `<span class="category-tag">${post.category}</span>` : ''}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            renderAllPosts(posts) {
+                const container = document.getElementById('allPosts');
+                
+                if (posts.length === 0) {
+                    container.innerHTML = '<div class="no-results">No posts found</div>';
+                    return;
+                }
+
+                container.innerHTML = posts.map(post => `
+                    <div class="post-card" onclick="app.openPost('${post.slug}')">
+                        ${post.featured_image ? 
+                            `<img src="${post.featured_image}" alt="${post.title}" class="post-image">` : 
+                            '<div class="post-image" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"></div>'
+                        }
+                        <div class="post-content">
+                            <h3 class="post-title">${post.title}</h3>
+                            <p class="post-excerpt">${post.excerpt || 'No excerpt available'}</p>
+                            <div class="post-meta">
+                                <span>${post.author || 'Anonymous'}</span>
+                                <span>${post.category ? `<span class="category-tag">${post.category}</span>` : ''}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            renderCategoryFilter() {
+                const select = document.getElementById('categoryFilter');
+                const options = this.categories.map(category => 
+                    `<option value="${category}">${category}</option>`
+                ).join('');
+                select.innerHTML = '<option value="">All Categories</option>' + options;
+            }
+
+            filterPosts() {
+                const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+                const selectedCategory = document.getElementById('categoryFilter').value;
+
+                let filtered = [...this.allPosts];
+
+                if (searchTerm) {
+                    filtered = filtered.filter(post => 
+                        post.title.toLowerCase().includes(searchTerm) ||
+                        post.content.toLowerCase().includes(searchTerm) ||
+                        (post.excerpt && post.excerpt.toLowerCase().includes(searchTerm))
+                    );
+                }
+
+                if (selectedCategory) {
+                    filtered = filtered.filter(post => post.category === selectedCategory);
+                }
+
+                this.currentPosts = filtered;
+                this.renderAllPosts(this.currentPosts);
+            }
+
+            async openPost(slug) {
+                try {
+                    const response = await fetch(`/api/posts/${slug}`);
+                    const post = await response.json();
+                    
+                    if (response.ok) {
+                        this.renderArticle(post);
+                        this.showArticlePage();
+                        window.history.pushState({ post: slug }, post.title, `/post/${slug}`);
+                    } else {
+                        alert('Post not found');
+                    }
+                } catch (error) {
+                    console.error('Error loading post:', error);
+                    alert('Error loading post');
+                }
+            }
+
+            renderArticle(post) {
+                const container = document.getElementById('articleContent');
+                const publishDate = new Date(post.created_at).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+
+                container.innerHTML = `
+                    <h1 class="article-title">${post.title}</h1>
+                    <div class="article-meta">
+                        <p>By ${post.author || 'Anonymous'} • ${publishDate}</p>
+                        ${post.category ? `<span class="category-tag">${post.category}</span>` : ''}
+                        ${post.tags ? `<p>Tags: ${post.tags}</p>` : ''}
+                    </div>
+                    ${post.featured_image ? `<img src="${post.featured_image}" alt="${post.title}" style="width: 100%; max-height: 400px; object-fit: cover; border-radius: 8px; margin-bottom: 2rem;">` : ''}
+                    <div class="article-content">${post.content}</div>
+                `;
+            }
+
+            showHomePage() {
+                document.getElementById('homeView').style.display = 'block';
+                document.getElementById('articleView').style.display = 'none';
+                window.history.pushState({}, 'My Blog', '/');
+            }
+
+            showArticlePage() {
+                document.getElementById('homeView').style.display = 'none';
+                document.getElementById('articleView').style.display = 'block';
+            }
+
+            handleURLRouting() {
+                const path = window.location.pathname;
+                if (path.startsWith('/post/')) {
+                    const slug = path.split('/post/')[1];
+                    if (slug) {
+                        this.openPost(slug);
+                    }
+                } else {
+                    this.showHomePage();
+                }
+            }
+        }
+
+        // Initialize the app
+        const app = new BlogApp();
+    </script>
+</body>
+</html>

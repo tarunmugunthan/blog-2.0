@@ -1,0 +1,29 @@
+{
+    "name": "lightweight-blog-app",
+    "version": "1.0.0",
+    "description": "A lightweight full-stack blog application",
+    "main": "app.js",
+    "scripts": {
+      "start": "node app.js",
+      "dev": "nodemon app.js"
+    },
+    "keywords": [
+      "blog",
+      "cms",
+      "express",
+      "sqlite",
+      "lightweight"
+    ],
+    "author": "Your Name",
+    "license": "MIT",
+    "dependencies": {
+      "express": "^4.18.2",
+      "sqlite3": "^5.1.6",
+      "bcrypt": "^5.1.0",
+      "express-session": "^1.17.3",
+      "multer": "^1.4.5-lts.1"
+    },
+    "devDependencies": {
+      "nodemon": "^3.0.1"
+    }
+  }

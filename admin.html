@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Blog CMS</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .login-form {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .admin-container {
+            display: none;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .admin-header {
+            background: white;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .admin-title {
+            font-size: 1.5rem;
+            color: #2563eb;
+            font-weight: bold;
+        }
+
+        .logout-btn {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .admin-nav {
+            background: white;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-btn {
+            background: #6b7280;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .nav-btn.active, .nav-btn:hover {
+            background: #2563eb;
+        }
+
+        .admin-section {
+            display: none;
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .admin-section.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            border-color: #2563eb;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-checkbox {
+            margin-right: 0.5rem;
+        }
+
+        .btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        .posts-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .posts-table th, .posts-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .posts-table th {
+            background: #f9fafb;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-published {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-draft {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-featured {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        .editor-container {
+            margin-bottom: 1.5rem;
+        }
+
+        #editor {
+            min-height: 300px;
+        }
+
+        .file-upload {
+            margin-top: 1rem;
+        }
+
+        .upload-btn {
+            background: #059669;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .image-preview {
+            max-width: 200px;
+            max-height: 200px;
+            margin-top: 1rem;
+            border-radius: 8px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #6b7280;
+        }
+
+        .success-message, .error-message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .success-message {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+
+        @media (max-width: 768px) {
+            .admin-container {
+                padding: 1rem;
+            }
+
+            .nav-buttons {
+                flex-direction: column;
+            }
+
+            .posts-table {
+                font-size: 0.875rem;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="loginContainer" class="login-container">
+        <form id="loginForm" class="login-form">
+            <h2 style="text-align: center; margin-bottom: 2rem; color: #2563eb;">Admin Login</h2>
+            <div class="form-group">
+                <label class="form-label">Username</label>
+                <input type="text" id="username" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" id="password" class="form-input" required>
+            </div>
+            <button type="submit" class="btn" style="width: 100%;">Login</button>
+            <div id="loginError" class="error-message" style="display: none; margin-top: 1rem;"></div>
+        </form>
+    </div>
+
+    <div id="adminContainer" class="admin-container">
+        <header class="admin-header">
+            <h1 class="admin-title">Blog CMS Admin</h1>
+            <button id="logoutBtn" class="logout-btn">Logout</button>
+        </header>
+
+        <nav class="admin-nav">
+            <div class="nav-buttons">
+                <button class="nav-btn active" data-section="posts">All Posts</button>
+                <button class="nav-btn" data-section="editor">New Post</button>
+            </div>
+        </nav>
+
+        <section id="postsSection" class="admin-section active">
+            <h2>Manage Posts</h2>
+            <div id="postsLoading" class="loading">Loading posts...</div>
+            <div id="postsContainer"></div>
+        </section>
+
+        <section id="editorSection" class="admin-section">
+            <h2 id="editorTitle">Create New Post</h2>
+            <div id="editorMessage"></div>
+            
+            <form id="postForm">
+                <input type="hidden" id="editingPostId">
+                
+                <div class="form-group">
+                    <label class="form-label" for="postTitle">Title *</label>
+                    <input type="text" id="postTitle" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="postExcerpt">Excerpt</label>
+                    <textarea id="postExcerpt" class="form-textarea" placeholder="Brief description of the post"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Content *</label>
+                    <div class="editor-container">
+                        <div id="editor"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="postAuthor">Author</label>
+                    <input type="text" id="postAuthor" class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="postCategory">Category</label>
+                    <input type="text" id="postCategory" class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="postTags">Tags</label>
+                    <input type="text" id="postTags" class="form-input" placeholder="Separate tags with commas">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="featuredImage">Featured Image URL</label>
+                    <input type="text" id="featuredImage" class="form-input">
+                    <div class="file-upload">
+                        <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+                        <button type="button" class="upload-btn" onclick="document.getElementById('imageUpload').click()">
+                            Upload Image
+                        </button>
+                    </div>
+                    <img id="imagePreview" class="image-preview" style="display: none;">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" id="postFeatured" class="form-checkbox">
+                        Featured Post
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" id="postPublished" class="form-checkbox" checked>
+                        Published
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn">Save Post</button>
+                    <button type="button" id="cancelEdit" class="btn btn-secondary" style="display: none;">Cancel</button>
+                </div>
+            </form>
+        </section>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js"></script>
+    <script>
+        class AdminApp {
+            constructor() {
+                this.isAuthenticated = false;
+                this.currentEditingId = null;
+                this.quill = null;
+                
+                this.initQuillEditor();
+                this.initEventListeners();
+                this.checkAuth();
+            }
+
+            initQuillEditor() {
+                this.quill = new Quill('#editor', {
+                    theme: 'snow',
+                    modules: {
+                        toolbar: [
+                            [{ 'header': [1, 2, 3, false] }],
+                            ['bold', 'italic', 'underline', 'strike'],
+                            [{ 'color': [] }, { 'background': [] }],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                            [{ 'align': [] }],
+                            ['link', 'image', 'video'],
+                            ['clean']
+                        ]
+                    }
+                });
+            }
+
+            initEventListeners() {
+                // Login form
+                document.getElementById('loginForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.login();
+                });
+
+                // Logout
+                document.getElementById('logoutBtn').addEventListener('click', () => {
+                    this.logout();
+                });
+
+                // Navigation
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.switchSection(e.target.dataset.section);
+                    });
+                });
+
+                // Post form
+                document.getElementById('postForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.savePost();
+                });
+
+                // Cancel edit
+                document.getElementById('cancelEdit').addEventListener('click', () => {
+                    this.cancelEdit();
+                });
+
+                // Image upload
+                document.getElementById('imageUpload').addEventListener('change', (e) => {
+                    this.handleImageUpload(e);
+                });
+
+                // Featured image URL input
+                document.getElementById('featuredImage').addEventListener('input', (e) => {
+                    this.updateImagePreview(e.target.value);
+                });
+            }
+
+            async checkAuth() {
+                try {
+                    const response = await fetch('/api/admin/check');
+                    const result = await response.json();
+                    
+                    if (result.authenticated) {
+                        this.showAdminPanel();
+                        this.loadPosts();
+                    } else {
+                        this.showLogin();
+                    }
+                } catch (error) {
+                    console.error('Auth check failed:', error);
+                    this.showLogin();
+                }
+            }
+
+            async login() {
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                const errorDiv = document.getElementById('loginError');
+
+                try {
+                    const response = await fetch('/api/admin/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password })
+                    });
+
+                    if (response.ok) {
+                        this.showAdminPanel();
+                        this.loadPosts();
+                        errorDiv.style.display = 'none';
+                    } else {
+                        const result = await response.json();
+                        errorDiv.textContent = result.error || 'Login failed';
+                        errorDiv.style.display = 'block';
+                    }
+                } catch (error) {
+                    errorDiv.textContent = 'Login failed';
+                    errorDiv.style.display = 'block';
+                }
+            }
+
+            async logout() {
+                try {
+                    await fetch('/api/admin/logout', { method: 'POST' });
+                    this.showLogin();
+                } catch (error) {
+                    console.error('Logout failed:', error);
+                }
+            }
+
+            showLogin() {
+                document.getElementById('loginContainer').style.display = 'flex';
+                document.getElementById('adminContainer').style.display = 'none';
+                this.isAuthenticated = false;
+            }
+
+            showAdminPanel() {
+                document.getElementById('loginContainer').style.display = 'none';
+                document.getElementById('adminContainer').style.display = 'block';
+                this.isAuthenticated = true;
+            }
+
+            switchSection(section) {
+                // Update navigation
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelector(`[data-section="${section}"]`).classList.add('active');
+
+                // Show section
+                document.querySelectorAll('.admin-section').forEach(sec => {
+                    sec.classList.remove('active');
+                });
+                document.getElementById(`${section}Section`).classList.add('active');
+
+                // Load data if needed
+                if (section === 'posts') {
+                    this.loadPosts();
+                } else if (section === 'editor') {
+                    this.resetEditor();
+                }
+            }
+
+            async loadPosts() {
+                const container = document.getElementById('postsContainer');
+                const loading = document.getElementById('postsLoading');
+                
+                loading.style.display = 'block';
+                container.innerHTML = '';
+
+                try {
+                    const response = await fetch('/api/admin/posts');
+                    const posts = await response.json();
+                    
+                    loading.style.display = 'none';
+                    this.renderPosts(posts);
+                } catch (error) {
+                    loading.style.display = 'none';
+                    container.innerHTML = '<div class="error-message">Failed to load posts</div>';
+                }
+            }
+
+            renderPosts(posts) {
+                const container = document.getElementById('postsContainer');
+                
+                if (posts.length === 0) {
+                    container.innerHTML = '<p>No posts found. <a href="#" onclick="admin.switchSection(\'editor\')">Create your first post</a></p>';
+                    return;
+                }
+
+                const table = `
+                    <table class="posts-table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Author</th>
+                                <th>Category</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${posts.map(post => `
+                                <tr>
+                                    <td>
+                                        <strong>${post.title}</strong>
+                                        ${post.featured ? '<span class="status-badge status-featured">Featured</span>' : ''}
+                                    </td>
+                                    <td>${post.author || 'Anonymous'}</td>
+                                    <td>${post.category || '-'}</td>
+                                    <td>
+                                        <span class="status-badge ${post.published ? 'status-published' : 'status-draft'}">
+                                            ${post.published ? 'Published' : 'Draft'}
+                                        </span>
+                                    </td>
+                                    <td>${new Date(post.created_at).toLocaleDateString()}</td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="btn btn-small" onclick="admin.editPost(${post.id})">Edit</button>
+                                            <button class="btn btn-danger btn-small" onclick="admin.deletePost(${post.id}, '${post.title}')">Delete</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                
+                container.innerHTML = table;
+            }
+
+            async editPost(id) {
+                try {
+                    const response = await fetch(`/api/admin/posts/${id}`);
+                    const post = await response.json();
+                    
+                    if (response.ok) {
+                        this.populateEditor(post);
+                        this.switchSection('editor');
+                    } else {
+                        alert('Failed to load post');
+                    }
+                } catch (error) {
+                    console.error('Failed to load post:', error);
+                    alert('Failed to load post');
+                }
+            }
+
+            populateEditor(post) {
+                this.currentEditingId = post.id;
+                
+                document.getElementById('editingPostId').value = post.id;
+                document.getElementById('postTitle').value = post.title;
+                document.getElementById('postExcerpt').value = post.excerpt || '';
+                document.getElementById('postAuthor').value = post.author || '';
+                document.getElementById('postCategory').value = post.category || '';
+                document.getElementById('postTags').value = post.tags || '';
+                document.getElementById('featuredImage').value = post.featured_image || '';
+                document.getElementById('postFeatured').checked = post.featured;
+                document.getElementById('postPublished').checked = post.published;
+                
+                this.quill.root.innerHTML = post.content || '';
+                this.updateImagePreview(post.featured_image);
+                
+                document.getElementById('editorTitle').textContent = 'Edit Post';
+                document.getElementById('cancelEdit').style.display = 'inline-block';
+            }
+
+            resetEditor() {
+                this.currentEditingId = null;
+                
+                document.getElementById('postForm').reset();
+                document.getElementById('editingPostId').value = '';
+                document.getElementById('postPublished').checked = true;
+                
+                this.quill.root.innerHTML = '';
+                document.getElementById('imagePreview').style.display = 'none';
+                
+                document.getElementById('editorTitle').textContent = 'Create New Post';
+                document.getElementById('cancelEdit').style.display = 'none';
+                document.getElementById('editorMessage').innerHTML = '';
+            }
+
+            cancelEdit() {
+                this.resetEditor();
+            }
+
+            async savePost() {
+                const formData = {
+                    title: document.getElementById('postTitle').value,
+                    excerpt: document.getElementById('postExcerpt').value,
+                    content: this.quill.root.innerHTML,
+                    author: document.getElementById('postAuthor').value,
+                    category: document.getElementById('postCategory').value,
+                    tags: document.getElementById('postTags').value,
+                    featured_image: document.getElementById('featuredImage').value,
+                    featured: document.getElementById('postFeatured').checked,
+                    published: document.getElementById('postPublished').checked
+                };
+
+                const messageDiv = document.getElementById('editorMessage');
+                
+                try {
+                    const url = this.currentEditingId ? 
+                        `/api/admin/posts/${this.currentEditingId}` : 
+                        '/api/admin/posts';
+                    
+                    const method = this.currentEditingId ? 'PUT' : 'POST';
+                    
+                    const response = await fetch(url, {
+                        method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        messageDiv.innerHTML = '<div class="success-message">Post saved successfully!</div>';
+                        setTimeout(() => {
+                            this.resetEditor();
+                            this.switchSection('posts');
+                        }, 1500);
+                    } else {
+                        messageDiv.innerHTML = `<div class="error-message">${result.error || 'Failed to save post'}</div>`;
+                    }
+                } catch (error) {
+                    messageDiv.innerHTML = '<div class="error-message">Failed to save post</div>';
+                }
+            }
+
+            async deletePost(id, title) {
+                if (!confirm(`Are you sure you want to delete "${title}"?`)) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/admin/posts/${id}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (response.ok) {
+                        this.loadPosts();
+                    } else {
+                        alert('Failed to delete post');
+                    }
+                } catch (error) {
+                    console.error('Failed to delete post:', error);
+                    alert('Failed to delete post');
+                }
+            }
+
+            async handleImageUpload(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const formData = new FormData();
+                formData.append('image', file);
+
+                try {
+                    const response = await fetch('/api/admin/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        document.getElementById('featuredImage').value = result.url;
+                        this.updateImagePreview(result.url);
+                    } else {
+                        alert('Failed to upload image');
+                    }
+                } catch (error) {
+                    console.error('Upload failed:', error);
+                    alert('Failed to upload image');
+                }
+            }
+
+            updateImagePreview(url) {
+                const preview = document.getElementById('imagePreview');
+                if (url) {
+                    preview.src = url;
+                    preview.style.display = 'block';
+                } else {
+                    preview.style.display = 'none';
+                }
+            }
+        }
+
+        // Initialize admin app
+        const admin = new AdminApp();
+    </script>
+</body>
+</html>

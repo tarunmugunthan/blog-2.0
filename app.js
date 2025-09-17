@@ -3,6 +3,7 @@ const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcrypt');
 const session = require('express-session');
 const multer = require('multer');
+const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
 
@@ -10,8 +11,8 @@ const app = express();
 const PORT = 3000;
 
 // Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' })); // Increased for large image uploads
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.static('public'));
 app.use('/uploads', express.static('uploads'));
 
@@ -27,15 +28,82 @@ if (!fs.existsSync('uploads')) {
   fs.mkdirSync('uploads');
 }
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: 'uploads/',
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+// Configure multer for file uploads with larger limits (we'll resize after upload)
+const storage = multer.memoryStorage(); // Store in memory for processing
+
+const upload = multer({ 
+  storage,
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 50MB limit (we'll resize down)
+  },
+  fileFilter: (req, file, cb) => {
+    // Only allow image files
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'));
+    }
   }
 });
-const upload = multer({ storage });
+
+// Image processing function
+async function processImage(buffer, originalName) {
+  try {
+    const fileExtension = path.extname(originalName).toLowerCase();
+    const baseName = path.basename(originalName, fileExtension);
+    const timestamp = Date.now();
+    const uniqueSuffix = Math.round(Math.random() * 1E9);
+    
+    // Generate filename - prefer WebP for best compression
+    const outputFilename = `${timestamp}-${uniqueSuffix}-${baseName}.webp`;
+    const outputPath = path.join('uploads', outputFilename);
+    
+    // Get image metadata
+    const metadata = await sharp(buffer).metadata();
+    
+    let sharpInstance = sharp(buffer);
+    
+    // Determine optimal resize dimensions
+    const maxWidth = 1920;  // Max width for blog images
+    const maxHeight = 1080; // Max height for blog images
+    const targetQuality = 85; // Good balance of quality/size
+    
+    // Resize if image is too large
+    if (metadata.width > maxWidth || metadata.height > maxHeight) {
+      sharpInstance = sharpInstance.resize(maxWidth, maxHeight, {
+        fit: 'inside', // Maintain aspect ratio
+        withoutEnlargement: true // Don't upscale smaller images
+      });
+    }
+    
+    // Convert to WebP for optimal compression and quality
+    await sharpInstance
+      .webp({ 
+        quality: targetQuality,
+        effort: 6 // Higher effort = better compression
+      })
+      .toFile(outputPath);
+    
+    // Get file size info
+    const stats = await fs.promises.stat(outputPath);
+    const fileSizeKB = Math.round(stats.size / 1024);
+    
+    console.log(`Image processed: ${originalName} -> ${outputFilename}`);
+    console.log(`Original: ${metadata.width}x${metadata.height}, Final size: ${fileSizeKB}KB`);
+    
+    return {
+      filename: outputFilename,
+      originalName: originalName,
+      size: stats.size,
+      width: metadata.width > maxWidth ? maxWidth : metadata.width,
+      height: metadata.height > maxHeight ? maxHeight : metadata.height
+    };
+    
+  } catch (error) {
+    console.error('Image processing error:', error);
+    throw new Error('Failed to process image. Please try a different image.');
+  }
+}
 
 // Initialize SQLite database
 const db = new sqlite3.Database('blog.db');
@@ -283,16 +351,31 @@ app.delete('/api/admin/posts/:id', requireAuth, (req, res) => {
   });
 });
 
-// Upload image
-app.post('/api/admin/upload', requireAuth, upload.single('image'), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: 'No file uploaded' });
+// Upload image with automatic processing
+app.post('/api/admin/upload', requireAuth, upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+    
+    // Process the image (resize, optimize, convert to WebP)
+    const processedImage = await processImage(req.file.buffer, req.file.originalname);
+    
+    res.json({ 
+      url: `/uploads/${processedImage.filename}`,
+      filename: processedImage.filename,
+      originalName: processedImage.originalName,
+      size: processedImage.size,
+      dimensions: `${processedImage.width}x${processedImage.height}`,
+      message: 'Image uploaded and optimized successfully'
+    });
+    
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).json({ 
+      error: error.message || 'Failed to upload and process image'
+    });
   }
-  
-  res.json({ 
-    url: `/uploads/${req.file.filename}`,
-    filename: req.file.filename 
-  });
 });
 
 app.listen(PORT, () => {
